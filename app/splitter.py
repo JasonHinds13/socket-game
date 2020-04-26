@@ -1,8 +1,8 @@
 import json
 
-cardFile = open('data/cards.json', 'r')
-questionCards = open('data/questionCards.json', 'w')
-answerCards = open('data/answerCards.json', 'w')
+cardFile = open('app/data/cards.json', 'r')
+questionCards = open('app/data/questionCards.json', 'w')
+answerCards = open('app/data/answerCards.json', 'w')
 
 all_data = json.load(cardFile)
 question_data = []

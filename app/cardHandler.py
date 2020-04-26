@@ -1,8 +1,8 @@
 import json
 import random
 
-questionCards = open('data/questionCards.json', 'r')
-answerCards = open('data/answerCards.json', 'r')
+questionCards = open('app/data/questionCards.json', 'r')
+answerCards = open('app/data/answerCards.json', 'r')
 
 questions = json.load(questionCards)
 answers = json.load(answerCards)
