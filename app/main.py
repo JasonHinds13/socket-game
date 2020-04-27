@@ -1,13 +1,9 @@
-from flask import Flask, render_template, request
-from flask_cors import CORS, cross_origin
-from flask_socketio import SocketIO, send, emit, join_room, leave_room
+from app import socketio, app
+from flask import render_template, request
+from flask_cors import cross_origin
+from flask_socketio import emit, join_room, leave_room
 
-from cardHandler import getRandomQuestion, getAnswerCards
-
-app = Flask(__name__)
-CORS(app, support_credentials=True)
-app.config['SECRET_KEY'] = 'secret'
-socketio = SocketIO(app, cors_allowed_origins="*")
+from app.cardHandler import getRandomQuestion, getAnswerCards
 
 users = {}
 
@@ -55,6 +51,3 @@ def getAnswers(data):
 @cross_origin(app)
 def submit_answer(data):
 	emit('show_answer', data, room=data["roomid"])
-
-if __name__ == '__main__':
-    socketio.run(app)
