@@ -26,8 +26,14 @@ DB_DRIVER = DRIVER
 [SERVER]  
 SECRET = SUPERSECRETKEY
 
+## Database setup
+Run the following commands to create the database tables:  
+* `python flask-migrate.py init`
+* `python flask-migrate.py migrate`
+* `python flask-migrate.py upgrade`
+
 ## Startup Commands
-`virtualenv venv`  
-`source venv/bin/activate`  
-`pip install -r requirements.txt`  
-`python run.py`
+* `virtualenv venv`  
+* `source venv/bin/activate` (linux or mac) / `venv\Scripts\activate`
+* `pip install -r requirements.txt`  
+* `python run.py`
