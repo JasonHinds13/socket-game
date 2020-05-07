@@ -112,13 +112,28 @@
 											"top": 282,
 											"width": 305.77783203125,
 											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "AAAAAAFx8XKDrA+0KTc=",
+											"_parent": {
+												"$ref": "AAAAAAFx7NQtspJXsVM="
+											},
+											"model": {
+												"$ref": "AAAAAAFx8XKDhQ+x9BI="
+											},
+											"font": "Arial;13;0",
+											"left": 45,
+											"top": 297,
+											"width": 305.77783203125,
+											"height": 13
 										}
 									],
 									"font": "Arial;13;0",
 									"left": 40,
 									"top": 247,
 									"width": 315.77783203125,
-									"height": 53
+									"height": 68
 								}
 							],
 							"font": "Arial;13;0",
@@ -1019,6 +1034,15 @@
 							"name": "GAME_POINTS",
 							"type": "INTEGER",
 							"length": "9"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "AAAAAAFx8XKDhQ+x9BI=",
+							"_parent": {
+								"$ref": "AAAAAAFx7NQtsJJTtH0="
+							},
+							"name": "LAST_ACTIVE",
+							"type": "DATETIME"
 						}
 					]
 				},
