@@ -353,13 +353,28 @@
 											"top": 305,
 											"width": 338.2841796875,
 											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "AAAAAAFx8YlbiA+83nk=",
+											"_parent": {
+												"$ref": "AAAAAAFx7OWye5LhBOk="
+											},
+											"model": {
+												"$ref": "AAAAAAFx8YlbZQ+55fg="
+											},
+											"font": "Arial;13;0",
+											"left": 629,
+											"top": 320,
+											"width": 338.2841796875,
+											"height": 13
 										}
 									],
 									"font": "Arial;13;0",
 									"left": 624,
 									"top": 255,
 									"width": 348.2841796875,
-									"height": 68
+									"height": 83
 								}
 							],
 							"font": "Arial;13;0",
@@ -1292,6 +1307,15 @@
 							"name": "NUMBER_OF_WHITE_CARDS",
 							"type": "INTEGER",
 							"length": "1"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "AAAAAAFx8YlbZQ+55fg=",
+							"_parent": {
+								"$ref": "AAAAAAFx7OWyepLdBck="
+							},
+							"name": "HAS_ENDED",
+							"type": "BOOLEAN"
 						}
 					]
 				},
