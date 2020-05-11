@@ -7,6 +7,8 @@ from datetime import datetime
 from app import db
 from app.models.players import Persons
 from app.models.rooms import Rooms
+from app.models.rounds import Rounds
+from app.models.cards_played import CardHistory
 
 from app.cardHandler import getRandomQuestion, getAnswerCards
 
@@ -29,21 +31,19 @@ def on_join(data):
 	join_room(room)
 	users[username] = request.sid
 
-	# TODO: Check if room exists, create room
 	room_obj = Rooms.query.filter_by(room_id=room).first()
 	if room_obj is None:
 		new_room = Rooms(room_id=room, is_active=True, is_open=True, number_of_users=1)
 	elif room_obj.is_active and room_obj.is_open:
 		room_obj.number_of_users += 1
 	else:
-		# emit join room error. room is closed
+		emit('room_closed', data, room=room)
 		return
 
-	# TODO: Add user to room
 	person_obj = Persons.query.filter_by(player_name=username, current_room=room).first()
 
 	if person_obj is not None:
-		# emit('join_room_message', data, room=room)
+		emit('payer_name_duplicate', data, room=room)
 		return
 
 	person = Persons(player_name=username, current_room=room, game_points=0, last_active=datetime.now())
@@ -68,6 +68,23 @@ def on_leave(data):
 @cross_origin(app)
 def getQuestion(data):
 	question = getRandomQuestion()
+
+	new_round = Rounds(room_id=data["roomid"], question_card_holder=data["username"])
+	last_round = Rounds.query.filter_by(room_id=data["roomid"]).order_by(Rounds.round_number.desc()).first()
+
+	if last_round is not None and new_round.question_card_holder == last_round.quequestion_card_holder:
+		emit('drew_question_last', data, room=data["roomid"])
+		return
+
+	new_round.round_number = last_round.round_number+1 if last_round is not None else 1
+	new_round.number_of_answer_cards = question['numAnswers']
+
+	card_history = CardHistory(player_name=data['username'], round_number=new_round.round_number, room_id=data['roomid'], card_played=question['text'], card_type='question')
+
+	db.session.add(card_history)
+	db.session.add(new_round)
+	db.session.commit()
+
 	emit('get_question', question, room=data['roomid'])
 
 @socketio.on('draw_answers')
