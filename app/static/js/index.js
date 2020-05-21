@@ -33,6 +33,16 @@ $(document).ready(function(){
         $("#messages").append('<li>'+data["message"]+'</li>');
     });
 
+    socket.on('room_closed', function(data){
+        $("#messages").append('<li>The room is closed</li>');
+        join_room_button_reset()
+    });
+
+    socket.on('payer_name_duplicate', function(data){
+        $("#messages").append('<li>You are already in room: '+data["roomid"]+'</li>');
+        join_room_button_reset()
+    });
+
     socket.on('message', function(data){
         $("#messages").append('<li>'+data['username'] + ': ' + data["message"]+'</li>');
     });
@@ -93,3 +103,12 @@ $(document).ready(function(){
         $(this).prop('disabled', true);
     });
 });
+
+function join_room_button_reset(){
+        $("#username").prop('disabled',false);
+        $("#roomid").prop('disabled',false);
+        $("#joinButton").prop('disabled',false);
+        $("#sendButton").prop('disabled',true);
+        $("#drawButton").prop('disabled',true);
+        $("#getAnswersButton").prop('disabled',true);
+}
