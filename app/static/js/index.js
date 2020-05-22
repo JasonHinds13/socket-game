@@ -43,6 +43,10 @@ $(document).ready(function(){
         join_room_button_reset()
     });
 
+    socket.on('drew_question_last', function(data){
+        $("#messages").append('<li>Player '+data["username"]+' drew the last question card. Someone else draw</li>');
+    });
+
     socket.on('message', function(data){
         $("#messages").append('<li>'+data['username'] + ': ' + data["message"]+'</li>');
     });
