@@ -9,6 +9,7 @@ from app.models.players import Persons
 from app.models.rooms import Rooms
 from app.models.rounds import Rounds
 from app.models.cards_played import CardHistory
+from sqlalchemy import func
 
 from app.cardHandler import getRandomQuestion, getAnswerCards
 
@@ -72,7 +73,7 @@ def getQuestion(data):
 	new_round = Rounds(room_id=data["roomid"], question_card_holder=data["username"])
 	last_round = Rounds.query.filter_by(room_id=data["roomid"]).order_by(Rounds.round_number.desc()).first()
 
-	if last_round is not None and new_round.question_card_holder == last_round.quequestion_card_holder:
+	if last_round is not None and new_round.question_card_holder == last_round.question_card_holder:
 		emit('drew_question_last', data, room=data["roomid"])
 		return
 
@@ -96,4 +97,37 @@ def getAnswers(data):
 @socketio.on('submit_answer')
 @cross_origin(app)
 def submit_answer(data):
-	emit('show_answer', data, room=data["roomid"])
+
+	current_round = Rounds.query.filter_by(room_id=data["roomid"]).order_by(Rounds.round_number.desc()).first()
+
+	player_cards = CardHistory.query.filter_by(room_id=data['roomid'], player_name=data['username'], round_number=current_round.round_number, card_type='answer').count()
+	if player_cards >= current_round.number_of_answer_cards:
+		emit('submit_answer_failed', data,room=users[data["username"]])
+		return
+
+	data['round'] = current_round.round_number
+
+	card_played = CardHistory(player_name=data['username'], round_number=current_round.round_number, room_id=data['roomid'], card_played=data['answer'], card_type='answer')
+	db.session.add(card_played)
+	db.session.commit()
+
+	emit('submit_answer_success', data, room=data["roomid"])
+
+	plays_played = CardHistory.query.filter_by(room_id=data['roomid'], round_number=current_round.round_number, card_type='answer').with_entities(CardHistory.player_name).distinct().count()
+	players_in_room = Rooms.query.filter_by(room_id=data['roomid']).first().number_of_users
+
+	players_card_count = CardHistory.query.filter_by(room_id=data['roomid'], round_number=data['round'], card_type='answer').with_entities(CardHistory.player_name, func.count(CardHistory.player_name)).group_by(CardHistory.player_name).all()
+	all_cards_played = True
+	for player_card_history in players_card_count:
+		if player_card_history[1] != current_round.number_of_answer_cards:
+			all_cards_played = False
+			break
+
+	if (plays_played == players_in_room) and all_cards_played:
+		cards = CardHistory.query.filter_by(room_id=data['roomid'], round_number=data['round'], card_type='answer').all()
+		data_to_show = []
+
+		for card in cards:
+			data_to_show.append({'round': data['round'], 'username': card.player_name, 'answer': card.card_played})
+
+		emit('show_answer', data_to_show, room=data["roomid"])

@@ -44,7 +44,11 @@ $(document).ready(function(){
     });
 
     socket.on('drew_question_last', function(data){
-        $("#messages").append('<li>Player '+data["username"]+' drew the last question card. Someone else draw</li>');
+        $("#gameAnnouncements").append('<li>Player '+data["username"]+' drew the last question card. Someone else draw</li>');
+    });
+
+    socket.on('submit_answer_success', function(data){
+        $("#gameAnnouncements").append('<li>Round '+data["round"]+' - '+data["username"]+' played a card.</li>');
     });
 
     socket.on('message', function(data){
@@ -66,7 +70,15 @@ $(document).ready(function(){
     });
 
     socket.on('show_answer', function(data){
-        $("#gameAnnouncements").append('<li>'+data['username'] + ' chose: ' + data["answer"]+'</li>');
+        $("#gameAnnouncements").append('<div>------------ Round '+data[0]['round']+' Answers------------</div>');
+        for(var i=0; i < data.length; i++){
+            $("#gameAnnouncements").append('<li>Round '+data[i]['round']+' - '+data[i]['username'] + ' chose: ' + data[i]["answer"]+'</li>');
+        }
+        $("#gameAnnouncements").append('<div>----------------------------------</div>');
+    });
+
+    socket.on('submit_answer_failed', function(data){
+        $("#gameAnnouncements").append('<li>You have already played for this round</li>');
     });
 
     $("#sendButton").click(function(){
