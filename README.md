@@ -28,9 +28,16 @@ SECRET = SUPERSECRETKEY
 
 ## Database setup
 Run the following commands to create the database tables:  
-* `python flask-migrate.py init`
-* `python flask-migrate.py migrate`
 * `python flask-migrate.py upgrade`
+
+Note: you will need to update the config.ini with your database details before running these commands
+
+## Database Upgrade
+Run the following commands when making changes to the database models:
+* `python flask-migrate.py db migrate` to add changes to migration folder
+* `python flask-migrate.py db upgrade` to reflect changes in database
+
+Note: you will need to update the config.ini with your database details before running these commands
 
 ## Startup Commands
 * `virtualenv venv`  

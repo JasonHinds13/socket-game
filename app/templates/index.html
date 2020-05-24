@@ -4,109 +4,10 @@
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js">
 		</script>
-		<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}"/>
+		<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/style.css')}}"/>
 	</head>
 	<body>
 		<h1>Welcome to Cards Against Humanity Online</h1>
-
-		<script type="text/javascript">
-			$(document).ready(function(){
-				var socket = io.connect('http://127.0.0.1:5000');
-
-				var myCards = [];
-				const cardsNeeded = 5;
-
-				function removeCard(cards, index){
-					var newCards = []
-					for(var i=0; i < cards.length; i++){
-						if(i != index){
-							newCards.push(cards[i]);
-						}
-					}
-					return newCards;
-				}
-
-				$("#joinButton").click(function(){
-					var data = {
-						username : $("#username").val(),
-						roomid : $("#roomid").val()
-					};
-					socket.emit('join_room', data);
-
-					$("#username").prop('disabled',true);
-					$("#roomid").prop('disabled',true);
-					$("#joinButton").prop('disabled',true);
-					$("#sendButton").prop('disabled',false);
-					$("#drawButton").prop('disabled',false);
-					$("#getAnswersButton").prop('disabled',false);
-				});
-
-				socket.on('join_room_message', function(data){
-					$("#messages").append('<li>'+data["message"]+'</li>');
-				});
-
-				socket.on('message', function(data){
-					$("#messages").append('<li>'+data['username'] + ': ' + data["message"]+'</li>');
-				});
-
-				socket.on('get_question', function(data){
-					$(".question-card .card-text").text(data["text"]);
-				});
-
-				socket.on('get_answers', function(data){
-					for(var i=0; i < data.length; i++){
-						myCards.push(data[i]["text"]);
-					}
-					for(var i=0; i < myCards.length; i++){
-						$($(".answerbtn")[i]).text(myCards[i]);
-					}
-					$(".answerbtn").prop('disabled', false);
-				});
-
-				socket.on('show_answer', function(data){
-					$("#gameAnnouncements").append('<li>'+data['username'] + ' chose: ' + data["answer"]+'</li>');
-				});
-
-				$("#sendButton").click(function(){
-					var data = {
-						username : $("#username").val(),
-						roomid : $("#roomid").val(),
-						message: $("#myMessage").val()
-					};
-					socket.emit('message', data);
-				});
-
-				$("#drawButton").click(function(){
-					var data = {"roomid": $("#roomid").val()};
-					socket.emit('draw_question',data);
-				});
-
-				$("#getAnswersButton").click(function(){
-					var data = {
-						"needed": cardsNeeded - myCards.length,
-						"username": $("#username").val()
-				};
-					socket.emit('draw_answers',data);
-				});
-
-				$(".answerbtn").click(function(){
-					var data = {
-						"username": $("#username").val(),
-						"roomid": $("#roomid").val(),
-						"answer": $(this).text()
-					};
-					socket.emit('submit_answer',data);
-
-					for(var i=0; i < myCards.length; i++){
-						if(myCards[i] == $(this).text()){
-							myCards = removeCard(myCards, i);
-						}
-					}
-					$(this).prop('disabled', true);
-				});
-			});
-
-		</script>
 
 		<div>
 			<h3>Sign In</h3>
@@ -150,5 +51,6 @@
 			</ul>
 		</div>
 
+	<script src="{{ url_for('static',filename='js/index.js') }}"></script>
 	</body>
 </html>
