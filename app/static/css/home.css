@@ -103,3 +103,68 @@ body{
   border-radius: 5px;
   display: inline-block;
 }
+
+#myMessage{
+  padding: 7px;
+  border-radius: 5px;
+}
+
+.white-text{
+  color: white;
+}
+
+#messages-div{
+  height: 100px;
+  width: 250px;
+  margin: 10px;
+  overflow: auto;
+}
+
+.chat-message{
+  margin-bottom: 5px;
+}
+
+#answercards{
+  text-align: center;
+}
+
+.card{
+  width: 150px;
+  height: 200px;
+  border-radius: 5px;
+  text-align: center;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.question-card{
+  color: #fff;
+  background-color: #000;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.answer-card{
+  color: #000;
+  background-color: #fff;
+  display: inline-block;
+}
+
+.inactive-answer-card{
+  color: #000;
+  background-color: #D3D3D3;
+  display: inline-block;
+}
+
+.card-text{
+  margin: 0;
+  padding: 0;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.draw-question{
+  margin: 15px;
+  text-align: center;
+}
