@@ -1,0 +1,86 @@
+<html>
+	<head>
+		<title>Room #1</title>
+		<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/home.css')}}"/>
+
+		<link rel="stylesheet" type="text/css" href="../static/css/home.css"/>
+
+	</head>
+	<body>
+		<div class="nav-div">
+			<div class="nav-left">
+				<h3>Socket Game Productions</h3>
+			</div>
+			<ul class="nav-bar">
+				<!-- If logged in -->
+				<li><a>Home</a></li>
+				<li><a>Find Room</a></li>
+				<li><a>Logout</a></li>
+			</ul>
+		</div>
+
+		<h2 class="title">Room #1</h2>
+
+		<div id="notifications">
+			<h3 class="white-text">Room Chat</h3>
+			<div id="messages-div">
+				<ul id="messages">
+					<li class="white-text chat-message">Daenerys: Is it done then? They belong to me?</li>
+					<li class="white-text chat-message">Messandai: *Speaks Valyrian*</li>
+					<li class="white-text chat-message">Bald Guy: It is done. You hold the whip</li>
+					<li class="white-text chat-message">Bald Guy: The bitch has her army</li>
+					<li class="white-text chat-message">Daenerys: Unsullied!</li>
+					<li class="white-text chat-message">Unsullied: *Army Noise*</li>
+					<li class="white-text chat-message">Daenerys: Forward! Halt!</li>
+					<li class="white-text chat-message">Bald Guy: Tell her the beast won't come.</li>
+					<li class="white-text chat-message">Daenerys: *Speaks mad Valyrian and shocks everyone with badass scene*</li>
+				</ul>
+			</div>
+			<input type="text" id="myMessage"/>
+			<button id="sendButton" class="join-room-btn">Send Message</button>
+		</div>
+
+		<div class="card question-card">
+			<p class="card-text">Draw Question Card</p>
+		</div>
+
+		<!-- Show if you are game master -->
+		<div class="draw-question">
+			<button class="join-room-btn">Draw New Question</button>
+		</div>
+
+		<div id="answercards">
+			<input type="checkbox" id="" name=""/>
+			<div class="card answer-card">
+				<p class="card-text">Draw Answer Cards</p>
+			</div>
+
+			<input type="checkbox" id="" name=""/>
+			<div class="card answer-card">
+				<p class="card-text">Draw Answer Cards</p>
+			</div>
+
+			<input type="checkbox" id="" name=""/>
+			<div class="card answer-card">
+				<p class="card-text">Draw Answer Cards</p>
+			</div>
+
+			<input type="checkbox" id="" name=""/>
+			<div class="card answer-card">
+				<p class="card-text">Draw Answer Cards</p>
+			</div>
+
+			<input type="checkbox" id="" name="" disabled="true"/>
+			<div class="card inactive-answer-card">
+				<p class="card-text">Draw Answer Cards</p>
+			</div>
+
+			<div>
+				<button class="join-room-btn">Choose Cards</button>
+				<button class="join-room-btn">Draw New Answer Cards</button>
+			</div>
+		</div>
+
+		<script src="{{ url_for('static',filename='js/index.js') }}"></script>
+	</body>
+</html>
