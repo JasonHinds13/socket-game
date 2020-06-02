@@ -77,6 +77,16 @@ def getQuestion(data):
 		emit('drew_question_last', data, room=data["roomid"])
 		return
 
+	room = Rooms.query.filter_by(room_id=data["roomid"]).first()
+
+	if room.number_of_users < 2:
+		data["error"] = "Unable to start the game with only 1 player"
+		emit('room_error', data, room=data["roomid"])
+		return
+
+	if last_round is None and room.number_of_users >=2:
+		room.is_open = False
+
 	new_round.round_number = last_round.round_number+1 if last_round is not None else 1
 	new_round.number_of_answer_cards = question['numAnswers']
 
@@ -84,6 +94,7 @@ def getQuestion(data):
 
 	db.session.add(card_history)
 	db.session.add(new_round)
+	db.session.add(room)
 	db.session.commit()
 
 	emit('get_question', question, room=data['roomid'])
