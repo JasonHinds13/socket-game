@@ -61,6 +61,14 @@ def on_join(data):
 def on_leave(data):
 	username = data['username']
 	room = data['roomid']
+
+	try:
+		if users[username] != request.sid:
+			raise KeyError
+	except KeyError as e:
+		# log("Remote address {} with SID {} attempted to leave room {} with username {}".format(request.remote_addr, request.sid, room, username))
+		return
+
 	leave_room(room)
 
 	player = Persons.query.filter_by(player_name=username).first()
