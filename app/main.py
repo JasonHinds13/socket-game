@@ -60,7 +60,7 @@ def on_join(data):
 @cross_origin(app)
 def on_leave(data):
 	username = data['username']
-	room = data['roomid']
+	room_id = data['roomid']
 
 	try:
 		if users[username] != request.sid:
@@ -69,7 +69,7 @@ def on_leave(data):
 		# log("Remote address {} with SID {} attempted to leave room {} with username {}".format(request.remote_addr, request.sid, room, username))
 		return
 
-	leave_room(room)
+	leave_room(room_id)
 
 	player = Persons.query.filter_by(player_name=username).first()
 	room = Rooms.query.filter_by(room_id=player.current_room).first()
@@ -85,8 +85,15 @@ def on_leave(data):
 
 	del users[username]
 
-	data = {"message": username + ' has left the room.'}
-	emit('leave_room_message', data, room=room)
+	new_data = {"message": username + ' has left the room.'}
+	emit('leave_room_message', new_data, room=room_id)
+
+	db.session.query(CardHistory).filter(CardHistory.player_name == username).delete()
+	db.session.commit()
+
+	current_round = Rounds.query.filter_by(room_id=room_id).order_by(Rounds.round_number.desc()).first()
+	data['round'] = current_round.round_number
+	show_card_history(current_round, data)
 
 @socketio.on('draw_question')
 @cross_origin(app)
@@ -147,10 +154,14 @@ def submit_answer(data):
 
 	emit('submit_answer_success', data, room=data["roomid"])
 
-	plays_played = CardHistory.query.filter_by(room_id=data['roomid'], round_number=current_round.round_number, card_type='answer').with_entities(CardHistory.player_name).distinct().count()
-	players_in_room = Rooms.query.filter_by(room_id=data['roomid']).first().number_of_users
+	show_card_history(current_round, data)
 
+
+def show_card_history(current_round, data):
+	plays_played = CardHistory.query.filter_by(room_id=data['roomid'], round_number=current_round.round_number,card_type='answer').with_entities(CardHistory.player_name).distinct().count()
+	players_in_room = Rooms.query.filter_by(room_id=data['roomid']).first().number_of_users
 	players_card_count = CardHistory.query.filter_by(room_id=data['roomid'], round_number=data['round'], card_type='answer').with_entities(CardHistory.player_name, func.count(CardHistory.player_name)).group_by(CardHistory.player_name).all()
+
 	all_cards_played = True
 	for player_card_history in players_card_count:
 		if player_card_history[1] != current_round.number_of_answer_cards:
