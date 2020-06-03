@@ -81,6 +81,10 @@ $(document).ready(function(){
         $("#gameAnnouncements").append('<li>You have already played for this round</li>');
     });
 
+    socket.on('room_error', function(data){
+        $("#messages").append('<li>'+data['error']+'</li>');
+    });
+
     $("#sendButton").click(function(){
         var data = {
             username : $("#username").val(),
