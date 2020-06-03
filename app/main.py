@@ -38,7 +38,7 @@ def on_join(data):
 	elif room_obj.is_active and room_obj.is_open:
 		room_obj.number_of_users += 1
 	else:
-		emit('room_closed', data, room=room)
+		emit('room_closed', data, room=request.sid)
 		return
 
 	person_obj = Persons.query.filter_by(player_name=username, current_room=room).first()
