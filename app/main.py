@@ -62,6 +62,21 @@ def on_leave(data):
 	username = data['username']
 	room = data['roomid']
 	leave_room(room)
+
+	player = Persons.query.filter_by(player_name=username).first()
+	room = Rooms.query.filter_by(room_id=player.current_room).first()
+	room.number_of_users -= 1
+
+	if room.number_of_users == 0:
+		room.is_active = False
+		room.is_open = False
+
+	db.session.delete(player)
+	db.session.add(room)
+	db.session.commit()
+
+	del users[username]
+
 	data = {"message": username + ' has left the room.'}
 	emit('leave_room_message', data, room=room)
 
