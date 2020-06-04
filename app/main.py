@@ -40,13 +40,13 @@ def on_join(data):
 		room_obj.number_of_users += 1
 	else:
 		emit('room_closed', data, room=request.sid)
-		return
+		return ''
 
 	person_obj = Persons.query.filter_by(player_name=username, current_room=room).first()
 
 	if person_obj is not None:
 		emit('payer_name_duplicate', data, room=room)
-		return
+		return ''
 
 	person = Persons(player_name=username, current_room=room, game_points=0, last_active=datetime.now())
 	try:
@@ -59,10 +59,12 @@ def on_join(data):
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	data = {"message": username + ' has joined the room.'}
 	emit('join_room_message', data, room=room)
+	return ''
+
 
 @socketio.on('leave_room')
 @cross_origin(app)
@@ -75,7 +77,7 @@ def on_leave(data):
 			raise KeyError
 	except KeyError as e:
 		# log("Remote address {} with SID {} attempted to leave room {} with username {}".format(request.remote_addr, request.sid, room, username))
-		return
+		return ''
 
 	leave_room(room_id)
 
@@ -96,7 +98,7 @@ def on_leave(data):
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	del users[username]
 
@@ -111,11 +113,12 @@ def on_leave(data):
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	current_round = Rounds.query.filter_by(room_id=room_id).order_by(Rounds.round_number.desc()).first()
 	data['round'] = current_round.round_number
 	show_card_history(current_round, data)
+	return ''
 
 @socketio.on('draw_question')
 @cross_origin(app)
@@ -127,14 +130,14 @@ def getQuestion(data):
 
 	if last_round is not None and new_round.question_card_holder == last_round.question_card_holder:
 		emit('drew_question_last', data, room=data["roomid"])
-		return
+		return ''
 
 	room = Rooms.query.filter_by(room_id=data["roomid"]).first()
 
 	if room.number_of_users < 2:
 		data["error"] = "Unable to start the game with only 1 player"
 		emit('room_error', data, room=data["roomid"])
-		return
+		return ''
 
 	if last_round is None and room.number_of_users >=2:
 		room.is_open = False
@@ -154,15 +157,17 @@ def getQuestion(data):
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	emit('get_question', question, room=data['roomid'])
+	return ''
 
 @socketio.on('draw_answers')
 @cross_origin(app)
 def getAnswers(data):
 	answers = getAnswerCards(data["needed"])
 	emit('get_answers', answers, room=users[data["username"]])
+	return ''
 
 @socketio.on('submit_answer')
 @cross_origin(app)
@@ -173,7 +178,7 @@ def submit_answer(data):
 	player_cards = CardHistory.query.filter_by(room_id=data['roomid'], player_name=data['username'], round_number=current_round.round_number, card_type='answer').count()
 	if player_cards >= current_round.number_of_answer_cards:
 		emit('submit_answer_failed', data,room=users[data["username"]])
-		return
+		return ''
 
 	data['round'] = current_round.round_number
 
@@ -187,11 +192,12 @@ def submit_answer(data):
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	emit('submit_answer_success', data, room=data["roomid"])
 
 	show_card_history(current_round, data)
+	return ''
 
 
 def show_card_history(current_round, data):
