@@ -24,9 +24,21 @@ $(document).ready(function(){
         $("#username").prop('disabled',true);
         $("#roomid").prop('disabled',true);
         $("#joinButton").prop('disabled',true);
+        $("#leaveButton").prop('disabled', false);
         $("#sendButton").prop('disabled',false);
         $("#drawButton").prop('disabled',false);
         $("#getAnswersButton").prop('disabled',false);
+    });
+
+    $('#leaveButton').click(function(){
+        var data = {
+            username : $("#username").val(),
+            roomid : $("#roomid").val()
+        };
+        socket.emit('leave_room', data);
+
+        join_room_button_reset();
+
     });
 
     socket.on('join_room_message', function(data){
@@ -128,6 +140,7 @@ function join_room_button_reset(){
         $("#username").prop('disabled',false);
         $("#roomid").prop('disabled',false);
         $("#joinButton").prop('disabled',false);
+        $("#leaveButton").prop('disabled', true);
         $("#sendButton").prop('disabled',true);
         $("#drawButton").prop('disabled',true);
         $("#getAnswersButton").prop('disabled',true);

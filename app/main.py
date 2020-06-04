@@ -10,6 +10,7 @@ from app.models.rooms import Rooms
 from app.models.rounds import Rounds
 from app.models.cards_played import CardHistory
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.cardHandler import getRandomQuestion, getAnswerCards
 
@@ -38,7 +39,7 @@ def on_join(data):
 	elif room_obj.is_active and room_obj.is_open:
 		room_obj.number_of_users += 1
 	else:
-		emit('room_closed', data, room=room)
+		emit('room_closed', data, room=request.sid)
 		return
 
 	person_obj = Persons.query.filter_by(player_name=username, current_room=room).first()
@@ -48,10 +49,17 @@ def on_join(data):
 		return
 
 	person = Persons(player_name=username, current_room=room, game_points=0, last_active=datetime.now())
-	db.session.add(person)
-	if room_obj is None:
-		db.session.add(new_room)
-	db.session.commit()
+	try:
+		db.session.add(person)
+		if room_obj is None:
+			db.session.add(new_room)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		# TODO: log exception
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return
 
 	data = {"message": username + ' has joined the room.'}
 	emit('join_room_message', data, room=room)
@@ -60,10 +68,54 @@ def on_join(data):
 @cross_origin(app)
 def on_leave(data):
 	username = data['username']
-	room = data['roomid']
-	leave_room(room)
-	data = {"message": username + ' has left the room.'}
-	emit('leave_room_message', data, room=room)
+	room_id = data['roomid']
+
+	try:
+		if users[username] != request.sid:
+			raise KeyError
+	except KeyError as e:
+		# log("Remote address {} with SID {} attempted to leave room {} with username {}".format(request.remote_addr, request.sid, room, username))
+		return
+
+	leave_room(room_id)
+
+	player = Persons.query.filter_by(player_name=username).first()
+	room = Rooms.query.filter_by(room_id=player.current_room).first()
+	room.number_of_users -= 1
+
+	if room.number_of_users == 0:
+		room.is_active = False
+		room.is_open = False
+
+	try:
+		db.session.delete(player)
+		db.session.add(room)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		# TODO: log exception
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return
+
+	del users[username]
+
+	new_data = {"message": username + ' has left the room.'}
+	emit('leave_room_message', new_data, room=room_id)
+
+	try:
+		db.session.query(CardHistory).filter(CardHistory.player_name == username).delete()
+		db.session.commit()
+	except SQLAlchemyError as e:
+		# TODO: log exception
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return
+
+	current_round = Rounds.query.filter_by(room_id=room_id).order_by(Rounds.round_number.desc()).first()
+	data['round'] = current_round.round_number
+	show_card_history(current_round, data)
 
 @socketio.on('draw_question')
 @cross_origin(app)
@@ -92,10 +144,17 @@ def getQuestion(data):
 
 	card_history = CardHistory(player_name=data['username'], round_number=new_round.round_number, room_id=data['roomid'], card_played=question['text'], card_type='question')
 
-	db.session.add(card_history)
-	db.session.add(new_round)
-	db.session.add(room)
-	db.session.commit()
+	try:
+		db.session.add(card_history)
+		db.session.add(new_round)
+		db.session.add(room)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		# TODO: log exception
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return
 
 	emit('get_question', question, room=data['roomid'])
 
@@ -119,15 +178,27 @@ def submit_answer(data):
 	data['round'] = current_round.round_number
 
 	card_played = CardHistory(player_name=data['username'], round_number=current_round.round_number, room_id=data['roomid'], card_played=data['answer'], card_type='answer')
-	db.session.add(card_played)
-	db.session.commit()
+
+	try:
+		db.session.add(card_played)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		# TODO: log exception
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return
 
 	emit('submit_answer_success', data, room=data["roomid"])
 
-	plays_played = CardHistory.query.filter_by(room_id=data['roomid'], round_number=current_round.round_number, card_type='answer').with_entities(CardHistory.player_name).distinct().count()
-	players_in_room = Rooms.query.filter_by(room_id=data['roomid']).first().number_of_users
+	show_card_history(current_round, data)
 
+
+def show_card_history(current_round, data):
+	plays_played = CardHistory.query.filter_by(room_id=data['roomid'], round_number=current_round.round_number,card_type='answer').with_entities(CardHistory.player_name).distinct().count()
+	players_in_room = Rooms.query.filter_by(room_id=data['roomid']).first().number_of_users
 	players_card_count = CardHistory.query.filter_by(room_id=data['roomid'], round_number=data['round'], card_type='answer').with_entities(CardHistory.player_name, func.count(CardHistory.player_name)).group_by(CardHistory.player_name).all()
+
 	all_cards_played = True
 	for player_card_history in players_card_count:
 		if player_card_history[1] != current_round.number_of_answer_cards:
