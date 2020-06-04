@@ -33,18 +33,22 @@ def on_join(data):
 	join_room(room)
 	users[username] = request.sid
 
+	app.logger.info('Attempting to add player {} to room {}'.format(username, room))
+
 	room_obj = Rooms.query.filter_by(room_id=room).first()
 	if room_obj is None:
 		new_room = Rooms(room_id=room, is_active=True, is_open=True, number_of_users=1)
 	elif room_obj.is_active and room_obj.is_open:
 		room_obj.number_of_users += 1
 	else:
+		app.logger.debug('Player {} attempted to joined closed room {}'.format(username, room))
 		emit('room_closed', data, room=request.sid)
 		return ''
 
 	person_obj = Persons.query.filter_by(player_name=username, current_room=room).first()
 
 	if person_obj is not None:
+		app.logger.debug('Player {} is already in room {}'.format(username, room))
 		emit('payer_name_duplicate', data, room=room)
 		return ''
 
@@ -55,7 +59,7 @@ def on_join(data):
 			db.session.add(new_room)
 		db.session.commit()
 	except SQLAlchemyError as e:
-		# TODO: log exception
+		app.logger.error('DB Error: {}'.format(str(e)))
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
@@ -63,6 +67,7 @@ def on_join(data):
 
 	data = {"message": username + ' has joined the room.'}
 	emit('join_room_message', data, room=room)
+	app.logger.info('Player {} joined room {}'.format(username, room))
 	return ''
 
 
