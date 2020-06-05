@@ -6,10 +6,12 @@ from configparser import ConfigParser, ExtendedInterpolation
 from os import getenv
 
 from logging.config import dictConfig
+from app.logging_helper.LogFilter import LogFilter
 
 app = Flask(__name__)
 CORS(app, support_credentials=True)
 
+# Load Config
 if getenv("USE_ENV_VAR"):
     app.config['SECRET_KEY'] = getenv("SECRET")
     app.config['SQLALCHEMY_DATABASE_URI'] = getenv("DATABASE_URL")
@@ -24,22 +26,28 @@ else:
     log_level = app_config.get('LOGGER', 'ROOT_LOG_LEVEL')
     default_format = app_config.get('LOGGER', 'DEFAULT_FORMAT')
 
+# Configure app logger
 dictConfig({
     'version': 1,
+    'filters': {
+        'default_filter': {
+            '()': LogFilter
+        }
+    },
     'formatters': {'default': {
-            'format': default_format,
+        'format': default_format,
     }},
     'handlers': {'wsgi': {
         'class': 'logging.StreamHandler',
         'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
+        'formatter': 'default',
+        'filters': ['default_filter']
     }},
     'root': {
         'level': log_level,
         'handlers': ['wsgi']
     }
 })
-
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True  # added just to suppress a warning
 
