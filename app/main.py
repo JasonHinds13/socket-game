@@ -33,20 +33,24 @@ def on_join(data):
 	join_room(room)
 	users[username] = request.sid
 
+	app.logger.info('Player [{}] -> Room [{}] -- Attempting to join the room'.format(username, room))
+
 	room_obj = Rooms.query.filter_by(room_id=room).first()
 	if room_obj is None:
 		new_room = Rooms(room_id=room, is_active=True, is_open=True, number_of_users=1)
 	elif room_obj.is_active and room_obj.is_open:
 		room_obj.number_of_users += 1
 	else:
+		app.logger.debug('Player [{}] -> Room [{}] -- Attempted to joined a closed room'.format(username, room))
 		emit('room_closed', data, room=request.sid)
-		return
+		return ''
 
 	person_obj = Persons.query.filter_by(player_name=username, current_room=room).first()
 
 	if person_obj is not None:
+		app.logger.debug('Player [{}] -> Room [{}] -- Attempted to join the room twice.'.format(username, room))
 		emit('payer_name_duplicate', data, room=room)
-		return
+		return ''
 
 	person = Persons(player_name=username, current_room=room, game_points=0, last_active=datetime.now())
 	try:
@@ -55,14 +59,17 @@ def on_join(data):
 			db.session.add(new_room)
 		db.session.commit()
 	except SQLAlchemyError as e:
-		# TODO: log exception
+		app.logger.warn('Player [{}] -> Room [{}] -- DB error: {}'.format(username, room, str(e)))
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	data = {"message": username + ' has joined the room.'}
 	emit('join_room_message', data, room=room)
+	app.logger.info('Player [{}] -> Room [{}] -- Successfully joined the room'.format(username, room))
+	return ''
+
 
 @socketio.on('leave_room')
 @cross_origin(app)
@@ -70,12 +77,14 @@ def on_leave(data):
 	username = data['username']
 	room_id = data['roomid']
 
+	app.logger.info('Player [{}] -> Room [{}] -- Attempting to leave room'.format(username, room_id))
+
 	try:
 		if users[username] != request.sid:
 			raise KeyError
 	except KeyError as e:
-		# log("Remote address {} with SID {} attempted to leave room {} with username {}".format(request.remote_addr, request.sid, room, username))
-		return
+		app.logger.debug("Player [{}] -> Room [{}] -- Request from SID [{}] attempted to leave room but was not found".format(username, room_id, request.sid))
+		return ''
 
 	leave_room(room_id)
 
@@ -92,30 +101,33 @@ def on_leave(data):
 		db.session.add(room)
 		db.session.commit()
 	except SQLAlchemyError as e:
-		# TODO: log exception
+		app.logger.warn('Player [{}] -> Room [{}] -- DB error: {}'.format(username, room_id, str(e)))
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	del users[username]
 
 	new_data = {"message": username + ' has left the room.'}
 	emit('leave_room_message', new_data, room=room_id)
 
+	app.logger.info('Player [{}] -> Room [{}] -- Left successfully'.format(username, room_id))
+
 	try:
 		db.session.query(CardHistory).filter(CardHistory.player_name == username).delete()
 		db.session.commit()
 	except SQLAlchemyError as e:
-		# TODO: log exception
+		app.logger.warn('Player [{}] -> Room [{}] -- DB error: {}'.format(username, room_id, str(e)))
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	current_round = Rounds.query.filter_by(room_id=room_id).order_by(Rounds.round_number.desc()).first()
 	data['round'] = current_round.round_number
 	show_card_history(current_round, data)
+	return ''
 
 @socketio.on('draw_question')
 @cross_origin(app)
@@ -125,21 +137,27 @@ def getQuestion(data):
 	new_round = Rounds(room_id=data["roomid"], question_card_holder=data["username"])
 	last_round = Rounds.query.filter_by(room_id=data["roomid"]).order_by(Rounds.round_number.desc()).first()
 
+	current_round_number = last_round.round_number + 1 if last_round is not None else 1
+
+	app.logger.info('Player [{}] -> Room [{}] -> Round [{}] -- Attempting to draw a question card'.format(data['username'], data['roomid'], current_round_number))
+
 	if last_round is not None and new_round.question_card_holder == last_round.question_card_holder:
+		app.logger.debug('Player [{}] -> Room [{}] -> Round [{}] -- Attempted to draw two question cards in a row'.format(data['username'], data['roomid'], current_round_number))
 		emit('drew_question_last', data, room=data["roomid"])
-		return
+		return ''
 
 	room = Rooms.query.filter_by(room_id=data["roomid"]).first()
 
 	if room.number_of_users < 2:
+		app.logger.debug('Player [{}] -> Room [{}] -> Round [{}] -- Attempted to start a game with only 1 player'.format(data['username'], data['roomid'], current_round_number))
 		data["error"] = "Unable to start the game with only 1 player"
 		emit('room_error', data, room=data["roomid"])
-		return
+		return ''
 
 	if last_round is None and room.number_of_users >=2:
 		room.is_open = False
 
-	new_round.round_number = last_round.round_number+1 if last_round is not None else 1
+	new_round.round_number = current_round_number
 	new_round.number_of_answer_cards = question['numAnswers']
 
 	card_history = CardHistory(player_name=data['username'], round_number=new_round.round_number, room_id=data['roomid'], card_played=question['text'], card_type='question')
@@ -150,19 +168,22 @@ def getQuestion(data):
 		db.session.add(room)
 		db.session.commit()
 	except SQLAlchemyError as e:
-		# TODO: log exception
+		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round_number, str(e)))
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	emit('get_question', question, room=data['roomid'])
+	app.logger.info('Player [{}] -> Room [{}] -> Round [{}] -- Played question card: [{}]'.format(data['username'], data['roomid'], current_round_number, question))
+	return ''
 
 @socketio.on('draw_answers')
 @cross_origin(app)
 def getAnswers(data):
 	answers = getAnswerCards(data["needed"])
 	emit('get_answers', answers, room=users[data["username"]])
+	return ''
 
 @socketio.on('submit_answer')
 @cross_origin(app)
@@ -170,10 +191,13 @@ def submit_answer(data):
 
 	current_round = Rounds.query.filter_by(room_id=data["roomid"]).order_by(Rounds.round_number.desc()).first()
 
+	app.logger.info('Player [{}] -> Room [{}] -> Round [{}] -- Attempting to submit an answer card'.format(data['username'], data['roomid'], current_round.round_number))
+
 	player_cards = CardHistory.query.filter_by(room_id=data['roomid'], player_name=data['username'], round_number=current_round.round_number, card_type='answer').count()
 	if player_cards >= current_round.number_of_answer_cards:
+		app.logger.debug('Player [{}] -> Room [{}] -> Round [{}] -- Attempted to play more than the required number of answer cards'.format(data['username'], data['roomid'], current_round.round_number))
 		emit('submit_answer_failed', data,room=users[data["username"]])
-		return
+		return ''
 
 	data['round'] = current_round.round_number
 
@@ -183,15 +207,17 @@ def submit_answer(data):
 		db.session.add(card_played)
 		db.session.commit()
 	except SQLAlchemyError as e:
-		# TODO: log exception
+		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round.round_number, str(e)))
 		db.session.rollback()
 		data['error'] = "There was an error, please contact admins"
 		emit('room_error', data, room=request.sid)
-		return
+		return ''
 
 	emit('submit_answer_success', data, room=data["roomid"])
+	app.logger.info('Player [{}] -> Room [{}] -> Round [{}] -- Submitted an answer card'.format(data['username'], data['roomid'], current_round.round_number))
 
 	show_card_history(current_round, data)
+	return ''
 
 
 def show_card_history(current_round, data):
@@ -211,5 +237,7 @@ def show_card_history(current_round, data):
 
 		for card in cards:
 			data_to_show.append({'round': data['round'], 'username': card.player_name, 'answer': card.card_played})
+
+		app.logger.info('Room [{}] -> Round [{}] -- Showing played cards'.format(data['roomid'], current_round.round_number))
 
 		emit('show_answer', data_to_show, room=data["roomid"])
