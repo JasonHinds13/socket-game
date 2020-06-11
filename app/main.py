@@ -230,6 +230,11 @@ def getAnswers(data):
 def submit_answer(data):
 
 	current_round = Rounds.query.filter_by(room_id=data["roomid"]).order_by(Rounds.round_number.desc()).first()
+	if current_round is None:
+		data['error'] = "Unable to submit an answer before the game starts"
+		app.logger.debug('Player [{}] -> Room [{}] -> Round [{}] -- Attempted to play an answer cards before the game started'.format(data['username'], data['roomid'], 0))
+		emit('room_error', data, room=request.sid)
+		return ''
 
 	app.logger.info('Player [{}] -> Room [{}] -> Round [{}] -- Attempting to submit an answer card'.format(data['username'], data['roomid'], current_round.round_number))
 
