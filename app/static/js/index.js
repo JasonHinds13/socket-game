@@ -114,7 +114,8 @@ $(document).ready(function(){
     $("#getAnswersButton").click(function(){
         var data = {
             "needed": cardsNeeded - myCards.length,
-            "username": $("#username").val()
+            "username": $("#username").val(),
+            'roomid': $("#roomid").val()
     };
         socket.emit('draw_answers',data);
     });
