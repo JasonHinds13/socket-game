@@ -23,7 +23,21 @@ def home():
 @socketio.on('message')
 @cross_origin(app)
 def handleMessage(data):
+	player = Persons.query.filter_by(player_name=data['username'], current_room=data['roomid']).first()
+	player.last_active = datetime.now()
+
+	try:
+		db.session.add(player)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		app.logger.warn('Player [{}] -> Room [{}] -- DB error: {}'.format(data['username'], data['roomid'], str(e)))
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return ''
+
 	emit('message', data, room=data['roomid'])
+	return ''
 
 @socketio.on('join_room')
 @cross_origin(app)
@@ -162,10 +176,14 @@ def getQuestion(data):
 
 	card_history = CardHistory(player_name=data['username'], round_number=new_round.round_number, room_id=data['roomid'], card_played=question['text'], card_type='question')
 
+	player = Persons.query.filter_by(player_name=data['username'], current_room=data['roomid']).first()
+	player.last_active = datetime.now()
+
 	try:
 		db.session.add(card_history)
 		db.session.add(new_round)
 		db.session.add(room)
+		db.session.add(player)
 		db.session.commit()
 	except SQLAlchemyError as e:
 		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round_number, str(e)))
@@ -203,8 +221,12 @@ def submit_answer(data):
 
 	card_played = CardHistory(player_name=data['username'], round_number=current_round.round_number, room_id=data['roomid'], card_played=data['answer'], card_type='answer')
 
+	player = Persons.query.filter_by(player_name=data['username'], current_room=data['roomid']).first()
+	player.last_active = datetime.now()
+
 	try:
 		db.session.add(card_played)
+		db.session.add(player)
 		db.session.commit()
 	except SQLAlchemyError as e:
 		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round.round_number, str(e)))
