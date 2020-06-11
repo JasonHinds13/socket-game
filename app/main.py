@@ -143,6 +143,8 @@ def on_leave(data):
 		return ''
 
 	current_round = Rounds.query.filter_by(room_id=room_id).order_by(Rounds.round_number.desc()).first()
+	if current_round is None:
+		return ''
 	data['round'] = current_round.round_number
 	show_card_history(current_round, data)
 	return ''
