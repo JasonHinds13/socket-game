@@ -14,6 +14,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.cardHandler import getRandomQuestion, getAnswerCards
 
+from app.decorators.game_decorators import active_room_required
+
 users = {}
 
 @app.route('/')
@@ -21,9 +23,24 @@ def home():
 	return render_template("index.html")
 
 @socketio.on('message')
+@active_room_required
 @cross_origin(app)
 def handleMessage(data):
+	player = Persons.query.filter_by(player_name=data['username'], current_room=data['roomid']).first()
+	player.last_active = datetime.now()
+
+	try:
+		db.session.add(player)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		app.logger.warn('Player [{}] -> Room [{}] -- DB error: {}'.format(data['username'], data['roomid'], str(e)))
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return ''
+
 	emit('message', data, room=data['roomid'])
+	return ''
 
 @socketio.on('join_room')
 @cross_origin(app)
@@ -72,6 +89,7 @@ def on_join(data):
 
 
 @socketio.on('leave_room')
+@active_room_required
 @cross_origin(app)
 def on_leave(data):
 	username = data['username']
@@ -125,11 +143,14 @@ def on_leave(data):
 		return ''
 
 	current_round = Rounds.query.filter_by(room_id=room_id).order_by(Rounds.round_number.desc()).first()
+	if current_round is None:
+		return ''
 	data['round'] = current_round.round_number
 	show_card_history(current_round, data)
 	return ''
 
 @socketio.on('draw_question')
+@active_room_required
 @cross_origin(app)
 def getQuestion(data):
 	question = getRandomQuestion()
@@ -162,10 +183,14 @@ def getQuestion(data):
 
 	card_history = CardHistory(player_name=data['username'], round_number=new_round.round_number, room_id=data['roomid'], card_played=question['text'], card_type='question')
 
+	player = Persons.query.filter_by(player_name=data['username'], current_room=data['roomid']).first()
+	player.last_active = datetime.now()
+
 	try:
 		db.session.add(card_history)
 		db.session.add(new_round)
 		db.session.add(room)
+		db.session.add(player)
 		db.session.commit()
 	except SQLAlchemyError as e:
 		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round_number, str(e)))
@@ -179,17 +204,37 @@ def getQuestion(data):
 	return ''
 
 @socketio.on('draw_answers')
+@active_room_required
 @cross_origin(app)
 def getAnswers(data):
 	answers = getAnswerCards(data["needed"])
+	player = Persons.query.filter_by(player_name=data['username'], current_room=data['roomid']).first()
+	player.last_active = datetime.now()
+
+	try:
+		db.session.add(player)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		app.logger.warn('Player [{}] -> Room [{}] -- DB error: {}'.format(data['username'], data['roomid'], str(e)))
+		db.session.rollback()
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return ''
+
 	emit('get_answers', answers, room=users[data["username"]])
 	return ''
 
 @socketio.on('submit_answer')
+@active_room_required
 @cross_origin(app)
 def submit_answer(data):
 
 	current_round = Rounds.query.filter_by(room_id=data["roomid"]).order_by(Rounds.round_number.desc()).first()
+	if current_round is None:
+		data['error'] = "Unable to submit an answer before the game starts"
+		app.logger.debug('Player [{}] -> Room [{}] -> Round [{}] -- Attempted to play an answer cards before the game started'.format(data['username'], data['roomid'], 0))
+		emit('room_error', data, room=request.sid)
+		return ''
 
 	app.logger.info('Player [{}] -> Room [{}] -> Round [{}] -- Attempting to submit an answer card'.format(data['username'], data['roomid'], current_round.round_number))
 
@@ -203,8 +248,12 @@ def submit_answer(data):
 
 	card_played = CardHistory(player_name=data['username'], round_number=current_round.round_number, room_id=data['roomid'], card_played=data['answer'], card_type='answer')
 
+	player = Persons.query.filter_by(player_name=data['username'], current_room=data['roomid']).first()
+	player.last_active = datetime.now()
+
 	try:
 		db.session.add(card_played)
+		db.session.add(player)
 		db.session.commit()
 	except SQLAlchemyError as e:
 		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round.round_number, str(e)))

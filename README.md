@@ -7,8 +7,11 @@ Set the `USE_ENV_VAR` environment variable to True and set the following environ
 application. 
 
 #### Environment Variables
-* `DATABASE_URL`:  database url in the format for `DB_DRIVER://USERNAME:PASSWORD@DB_HOST/DATABASE`
+* `DATABASE_URL`:  Database url in the format for `DB_DRIVER://USERNAME:PASSWORD@DB_HOST/DATABASE`
 * `SECRET`: Secret key for encryption
+* `ROOM_BACK_OFF`:  Back-off period in minute for checking if a room is active. 
+* `PLAYER_INACTIVITY`: Number of minutes all users in a room should be inactive for before deactivating the room
+* `SCHEDULER_ROOM_DEACTIVATION`: Interval in minutes between room inactivity check firing
 
 ### Using `config.ini`
 Make sure the `USE_ENV_VAR` environment variable to False or not set all and set the following in `app/config/config.ini` to configure the
@@ -25,6 +28,11 @@ DB_DRIVER = DRIVER
 
 [SERVER]  
 SECRET = SUPERSECRETKEY
+
+[INTERVALS]
+ROOM_BACK_OFF=5  
+PLAYER_INACTIVITY=2  
+SCHEDULER_ROOM_DEACTIVATION=5  
 
 ## Database setup
 Run the following commands to create the database tables:  

@@ -1,4 +1,5 @@
 from app import db
+from sqlalchemy.sql import func
 
 
 class Rooms(db.Model):
@@ -9,3 +10,4 @@ class Rooms(db.Model):
     is_active = db.Column(db.Boolean)
     is_open = db.Column(db.Boolean)
     number_of_users = db.Column(db.Integer)
+    last_activity_check = db.Column(db.DateTime, server_default=func.now())

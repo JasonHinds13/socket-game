@@ -15,6 +15,9 @@ CORS(app, support_credentials=True)
 if getenv("USE_ENV_VAR"):
     app.config['SECRET_KEY'] = getenv("SECRET")
     app.config['SQLALCHEMY_DATABASE_URI'] = getenv("DATABASE_URL")
+    app.config['ROOM_BACK_OFF'] = getenv("ROOM_BACK_OFF")
+    app.config['PLAYER_INACTIVITY'] = getenv("PLAYER_INACTIVITY")
+    app.config['SCHEDULER_ROOM_DEACTIVATION'] = getenv("SCHEDULER_ROOM_DEACTIVATION")
     log_level = getenv("ROOT_LOG_LEVEL")
     default_format = getenv('DEFAULT_FORMAT')
 else:
@@ -23,6 +26,9 @@ else:
 
     app.config['SECRET_KEY'] = app_config.get("SERVER", "SECRET")
     app.config['SQLALCHEMY_DATABASE_URI'] = app_config.get("DATABASE", "DB_URI")
+    app.config['ROOM_BACK_OFF'] = app_config.get("INTERVALS", "ROOM_BACK_OFF")
+    app.config['PLAYER_INACTIVITY'] = app_config.get("INTERVALS", "PLAYER_INACTIVITY")
+    app.config['SCHEDULER_ROOM_DEACTIVATION'] = app_config.get("INTERVALS", "SCHEDULER_ROOM_INACTIVITY")
     log_level = app_config.get('LOGGER', 'ROOT_LOG_LEVEL')
     default_format = app_config.get('LOGGER', 'DEFAULT_FORMAT')
 
