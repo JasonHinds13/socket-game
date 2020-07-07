@@ -17,7 +17,7 @@ def active_room_required(function):
             room_data["error"] = "This room does not exist."
             emit('room_error', room_data, room=request.sid)
             return ''
-        if room.is_open:
+        if room.is_active:
             return function(*args, **kwargs)
         else:
             room_data["error"] = "This room was closed due to player inactivity."
