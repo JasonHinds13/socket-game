@@ -1,6 +1,8 @@
 from app import db, app
 from app.models.rooms import Rooms
 from app.models.players import Persons
+from app.models.cards_played import CardHistory
+from app.models.rounds import Rounds
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -44,8 +46,36 @@ def deactivate_rooms():
         app.logger.debug('No rooms marked inactive')
 
 
+def remove_inactive_rooms():
+    back_off_time = datetime.now() - timedelta(minutes=int(app.config["ROOM_BACK_OFF"]))
+
+    app.logger.debug('getting inactive rooms')
+
+    rooms_to_remove = Rooms.query.filter(Rooms.last_activity_check <= str(back_off_time), Rooms.is_active == 'False').all()
+
+    for room in rooms_to_remove:
+        app.logger.debug('removing room data for room -> {}'.format(room.room_id))
+        delete_card_history_statement = CardHistory.__table__.delete().where(CardHistory.room_id == room.room_id)
+        delete_players_statement = Persons.__table__.delete().where(Persons.current_room == room.room_id)
+        delete_rounds_statement = Rounds.__table__.delete().where(Rounds.room_id == room.room_id)
+
+        db.session.execute(delete_card_history_statement)
+        db.session.execute(delete_players_statement)
+        db.session.execute(delete_rounds_statement)
+        db.session.delete(room)
+        app.logger.debug('removed room data for room -> {}'.format(room.room_id))
+
+    db.session.commit()
+
+    if len(rooms_to_remove) > 0:
+        app.logger.debug('room data removal committed')
+    else:
+        app.logger.debug('no room data removal committed')
+
+
 def initiate_schedule(*args):
     sched = BackgroundScheduler(daemon=True)
     sched.add_job(deactivate_rooms, 'interval', minutes=int(args[0]))
+    sched.add_job(remove_inactive_rooms, 'interval', minutes=int(args[1]))
 
     sched.start()
