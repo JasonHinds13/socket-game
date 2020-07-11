@@ -10,4 +10,5 @@ class Rooms(db.Model):
     is_active = db.Column(db.Boolean)
     is_open = db.Column(db.Boolean)
     number_of_users = db.Column(db.Integer)
+    game_reset_initiated = db.Column(db.Boolean, default=False)
     last_activity_check = db.Column(db.DateTime, server_default=func.now())
