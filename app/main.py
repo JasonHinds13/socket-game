@@ -290,3 +290,46 @@ def show_card_history(current_round, data):
 		app.logger.info('Room [{}] -> Round [{}] -- Showing played cards'.format(data['roomid'], current_round.round_number))
 
 		emit('show_answer', data_to_show, room=data["roomid"])
+
+
+@socketio.on('initiate_game_reset')
+@active_room_required
+@cross_origin(app)
+def on_initiate_game_reset(data):
+	app.logger.info('Player [{}] -> Room [{}] -- resetting room'.format(data['username'], data['roomid']))
+
+	room = Rooms.query.filter_by(room_id=data['roomid']).first()
+	player = Persons.query.filter_by(player_name=data['username']).first()
+	current_round = Rounds.query.filter_by(room_id=data['roomid']).order_by(Rounds.round_number.desc()).first()
+
+	if room.game_reset_initiated:
+		app.logger.debug('Player [{}] -> Room [{}] -- room reset already in progress'.format(data['username'], data['roomid']))
+		data['announcement'] = 'Game reset has already been initiated.'
+		emit('game_announcements', data, request.sid)
+		return ''
+	elif current_round is None:
+		app.logger.debug('Player [{}] -> Room [{}] -- no game data to reset'.format(data['username'], data['roomid']))
+		data['announcement'] = 'Cannot reset the game before it starts.'
+		emit('game_announcements', data, request.sid)
+		return ''
+
+	room.game_reset_initiated = True
+	player.game_reset_vote = True
+
+	try:
+		db.session.add(room)
+		db.session.add(player)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round.round_number, str(e)))
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return ''
+
+	data['announcement'] = "Game reset initiated by player: {}".format(data['username'])
+	emit('game_announcements', data, room=data['roomid'])
+
+	app.logger.debug('Player [{}] -> Room [{}] -> Round [{}] -- game reset successfully initiated'.format(data['username'], data['roomid'], current_round.round_number))
+	data['message'] = "Game reset initiated by player: {}. Please respond".format(data['username'])
+	emit('game_reset', data, include_self=False, room=data['roomid'])
+	return ''
