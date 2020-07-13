@@ -82,6 +82,14 @@ $(document).ready(function(){
         socket.emit('game_reset', data);
     });
 
+    socket.on('reset_game', function() {
+        $('#gameAnnouncements').children().remove();
+        $('.question-card > .card-text').text('Draw Card');
+        $('.answer-cards-list .answerbtn').text('X');
+        $('.answer-cards-list .answerbtn').prop('disabled', false);
+        $('#gameResetButton').prop('disabled', true);
+    });
+
     socket.on('get_question', function(data){
         $('#gameResetButton').prop('disabled', false);
         $(".question-card .card-text").text(data["text"]);

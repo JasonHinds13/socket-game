@@ -314,6 +314,7 @@ def on_initiate_game_reset(data):
 		return ''
 
 	room.game_reset_initiated = True
+	room.game_reset_votes = 1
 	player.game_reset_vote = True
 
 	try:
@@ -333,3 +334,81 @@ def on_initiate_game_reset(data):
 	data['message'] = "Game reset initiated by player: {}. Please respond".format(data['username'])
 	emit('game_reset', data, include_self=False, room=data['roomid'])
 	return ''
+
+
+@socketio.on('game_reset')
+@active_room_required
+@cross_origin(app)
+def on_game_reset_vote(data):
+	room = Rooms.query.filter_by(room_id=data['roomid']).first()
+	current_round = Rounds.query.filter_by(room_id=data['roomid']).order_by(Rounds.round_number.desc()).first()
+
+	if not room.game_reset_initiated:
+		app.logger.debug('Player [{}] -> Room [{}] -- room reset not in progress'.format(data['username'], data['roomid']))
+		data['announcement'] = 'Game reset not available.'
+		emit('game_announcements', data, request.sid)
+		return ''
+	elif current_round is None:
+		app.logger.debug('Player [{}] -> Room [{}] -- no game data to reset'.format(data['username'], data['roomid']))
+		data['announcement'] = 'Cannot reset the game before it starts.'
+		emit('game_announcements', data, request.sid)
+		return ''
+
+	player = Persons.query.filter_by(player_name=data['username']).first()
+	player.game_reset_vote = data['reset_choice']
+	room.game_reset_votes += 1
+
+	try:
+		db.session.add(player)
+		db.session.add(room)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round.round_number, str(e)))
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return ''
+
+	if room.game_reset_votes < room.number_of_users:
+		data['announcement'] = "Waiting for other players to vote"
+		emit('game_announcements', data, room=data['roomid'])
+		return ''
+
+	if reset_game(data):
+		data['announcement'] = "Game has been reset"
+		emit('reset_game', None, room=data['roomid'])
+	else:
+		data['announcement'] = 'The game continues'
+	emit('game_announcements', data, room=data['roomid'])
+
+	return ''
+
+
+def reset_game(data):
+	room = Rooms.query.filter_by(room_id=data['roomid']).first()
+	current_round = Rounds.query.filter_by(room_id=data['roomid']).order_by(Rounds.round_number.desc()).first()
+
+	reset_votes = Persons.query.filter_by(current_room=data['roomid'], game_reset_vote=True).count()
+
+	return_val = False
+	if reset_votes >= room.number_of_users / 2:
+		delete_card_history_statement = CardHistory.__table__.delete().where(CardHistory.room_id == room.room_id)
+		delete_rounds_statement = Rounds.__table__.delete().where(Rounds.room_id == room.room_id)
+
+		db.session.execute(delete_card_history_statement)
+		db.session.execute(delete_rounds_statement)
+		return_val = True
+
+	room.game_reset_votes = 0
+	room.game_reset_initiated = False
+
+	try:
+		db.session.add(room)
+		db.session.commit()
+	except SQLAlchemyError as e:
+		app.logger.warn(
+			'Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round.round_number, str(e)))
+		data['error'] = "There was an error, please contact admins"
+		emit('room_error', data, room=request.sid)
+		return_val = False
+
+	return return_val
