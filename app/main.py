@@ -142,6 +142,9 @@ def on_leave(data):
 		emit('room_error', data, room=request.sid)
 		return ''
 
+	if room.game_reset_initiated and room.is_active:
+		reset_game()
+
 	current_round = Rounds.query.filter_by(room_id=room_id).order_by(Rounds.round_number.desc()).first()
 	if current_round is None:
 		return ''
