@@ -307,6 +307,7 @@ def on_initiate_game_reset(data):
 	room = Rooms.query.filter_by(room_id=data['roomid']).first()
 	player = Persons.query.filter_by(player_name=data['username']).first()
 	current_round = Rounds.query.filter_by(room_id=data['roomid']).order_by(Rounds.round_number.desc()).first()
+	player.last_active = datetime.now()
 
 	if room.game_reset_initiated:
 		app.logger.debug('Player [{}] -> Room [{}] -- room reset already in progress'.format(data['username'], data['roomid']))
@@ -362,6 +363,7 @@ def on_game_reset_vote(data):
 
 	player = Persons.query.filter_by(player_name=data['username']).first()
 	player.game_reset_vote = data['reset_choice']
+	player.last_active = datetime.now()
 	room.game_reset_votes += 1
 
 	try:
