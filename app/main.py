@@ -15,7 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.cardHandler import getRandomQuestion, getAnswerCards
 
 from app.decorators.game_decorators import active_room_required
-
+from app.decorators.game_decorators import check_game_reset
 users = {}
 
 @app.route('/')
@@ -154,6 +154,7 @@ def on_leave(data):
 
 @socketio.on('draw_question')
 @active_room_required
+@check_game_reset
 @cross_origin(app)
 def getQuestion(data):
 	question = getRandomQuestion()
@@ -208,6 +209,7 @@ def getQuestion(data):
 
 @socketio.on('draw_answers')
 @active_room_required
+@check_game_reset
 @cross_origin(app)
 def getAnswers(data):
 	answers = getAnswerCards(data["needed"])
@@ -229,6 +231,7 @@ def getAnswers(data):
 
 @socketio.on('submit_answer')
 @active_room_required
+@check_game_reset
 @cross_origin(app)
 def submit_answer(data):
 
