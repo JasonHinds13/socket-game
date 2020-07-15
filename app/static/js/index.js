@@ -67,7 +67,31 @@ $(document).ready(function(){
         $("#messages").append('<li>'+data['username'] + ': ' + data["message"]+'</li>');
     });
 
+    socket.on('game_announcements', function(data) {
+        $('#gameAnnouncements').append('<li>'+data['announcement']+'</li>')
+    });
+
+    socket.on('game_reset', function(data) {
+        var reset_choice = confirm(data['message']);
+        var data = {
+            username : $("#username").val(),
+            roomid : $("#roomid").val(),
+            reset_choice: reset_choice
+        };
+
+        socket.emit('game_reset', data);
+    });
+
+    socket.on('reset_game', function() {
+        $('#gameAnnouncements').children().remove();
+        $('.question-card > .card-text').text('Draw Card');
+        $('.answer-cards-list .answerbtn').text('X');
+        $('.answer-cards-list .answerbtn').prop('disabled', false);
+        $('#gameResetButton').prop('disabled', true);
+    });
+
     socket.on('get_question', function(data){
+        $('#gameResetButton').prop('disabled', false);
         $(".question-card .card-text").text(data["text"]);
     });
 
@@ -135,6 +159,14 @@ $(document).ready(function(){
         }
         $(this).prop('disabled', true);
     });
+
+    $('#gameResetButton').click(function() {
+        var data = {
+            "username": $("#username").val(),
+            'roomid': $("#roomid").val()
+        };
+        socket.emit('initiate_game_reset', data);
+    });
 });
 
 function join_room_button_reset(){
@@ -145,4 +177,5 @@ function join_room_button_reset(){
         $("#sendButton").prop('disabled',true);
         $("#drawButton").prop('disabled',true);
         $("#getAnswersButton").prop('disabled',true);
+        $('#gameResetButton').prop('disabled', true);
 }
