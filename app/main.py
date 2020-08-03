@@ -71,9 +71,11 @@ def on_join(data):
 
 	person = Persons(player_name=username, current_room=room, game_points=0, last_active=datetime.now())
 	try:
-		db.session.add(person)
 		if room_obj is None:
 			db.session.add(new_room)
+			db.session.commit()
+
+		db.session.add(person)
 		db.session.commit()
 	except SQLAlchemyError as e:
 		app.logger.warn('Player [{}] -> Room [{}] -- DB error: {}'.format(username, room, str(e)))
