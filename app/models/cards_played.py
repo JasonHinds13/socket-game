@@ -1,4 +1,5 @@
 from app import db
+from app.models.rounds import Rounds
 
 
 class CardHistory(db.Model):
@@ -11,3 +12,5 @@ class CardHistory(db.Model):
     room_id = db.Column(db.String(255))
     card_played = db.Column(db.Text)
     card_type = db.Column(db.String(255))
+
+    __table_args__ = (db.ForeignKeyConstraint([round_number, room_id], [Rounds.round_number, Rounds.room_id]), {})
