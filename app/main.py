@@ -193,10 +193,11 @@ def getQuestion(data):
 	player.last_active = datetime.now()
 
 	try:
-		db.session.add(card_history)
 		db.session.add(new_round)
 		db.session.add(room)
 		db.session.add(player)
+		db.session.commit()
+		db.session.add(card_history)
 		db.session.commit()
 	except SQLAlchemyError as e:
 		app.logger.warn('Player [{}] -> Room [{}] -> Round [{}] -- DB error: {}'.format(data['username'], data['roomid'], current_round_number, str(e)))
