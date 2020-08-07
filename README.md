@@ -1,6 +1,8 @@
 # Socket Game
 An online adaptation of the party game Cards Against Humanity.
 
+
+## Initialize
 ## Config
 ### Using Environment Variables
 Set the `USE_ENV_VAR` environment variable to True and set the following environment variables to configure the
