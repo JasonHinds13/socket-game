@@ -49,32 +49,39 @@ $(document).ready(function(){
 
     socket.on('join_room_message', function(data){
         $("#messages").append('<li>'+data["message"]+'</li>');
+        scroll_down();
     });
 
     socket.on('room_closed', function(data){
         $("#messages").append('<li>The room is closed</li>');
-        join_room_button_reset()
+        join_room_button_reset();
+        scroll_down();
     });
 
     socket.on('payer_name_duplicate', function(data){
         $("#messages").append('<li>You are already in room: '+data["roomid"]+'</li>');
-        join_room_button_reset()
+        join_room_button_reset();
+        scroll_down();
     });
 
     socket.on('drew_question_last', function(data){
         $("#messages").append('<li>Player '+data["username"]+' drew the last question card. Someone else draw</li>');
+        scroll_down();
     });
 
     socket.on('submit_answer_success', function(data){
         $("#messages").append('<li>Round '+data["round"]+' - '+data["username"]+' played a card.</li>');
+        scroll_down();
     });
 
     socket.on('message', function(data){
         $("#messages").append('<li>'+data['username'] + ': ' + data["message"]+'</li>');
+        scroll_down();
     });
 
     socket.on('game_announcements', function(data) {
-        $('#messages').append('<li>'+data['announcement']+'</li>')
+        $('#messages').append('<li>'+data['announcement']+'</li>');
+        scroll_down();
     });
 
     socket.on('game_reset', function(data) {
@@ -117,14 +124,17 @@ $(document).ready(function(){
             $("#messages").append('<li>Round '+data[i]['round']+' - '+data[i]['username'] + ' chose: ' + data[i]["answer"]+'</li>');
         }
         $("#messages").append('<div>----------------------------------</div>');
+        scroll_down();
     });
 
     socket.on('submit_answer_failed', function(data){
         $("#messages").append('<li>You have already played for this round</li>');
+        scroll_down();
     });
 
     socket.on('room_error', function(data){
         $("#messages").append('<li>'+data['error']+'</li>');
+        scroll_down();
     });
 
     $("#sendButton").click(function(){
@@ -151,7 +161,7 @@ $(document).ready(function(){
     });
 
     $(".answer-card").click(function(){
-        var ans = $(this).first().text();
+        var ans = $(this).first().text().trim();
         var data = {
             "username": $("#username").val(),
             "roomid": $("#roomid").val(),
@@ -175,6 +185,11 @@ $(document).ready(function(){
         socket.emit('initiate_game_reset', data);
     });
 });
+
+function scroll_down(){
+    var mdiv = document.getElementById("messages-div");
+    mdiv.scrollTop = mdiv.scrollHeight;
+}
 
 function join_room_button_reset(){
         $("#username").prop('disabled',false);
