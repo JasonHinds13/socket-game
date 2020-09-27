@@ -30,6 +30,8 @@ $(document).ready(function(){
         $("#sendButton").prop('disabled',false);
         $("#drawButton").prop('disabled',false);
         $("#getAnswersButton").prop('disabled',false);
+
+        $("#signInModal").modal("hide");
     });
 
     $('#leaveButton').click(function(){
@@ -104,9 +106,9 @@ $(document).ready(function(){
             myCards.push(data[i]["text"]);
         }
         for(var i=0; i < myCards.length; i++){
-            $($(".answerbtn")[i]).text(myCards[i]);
+            $($(".answer-card .card-text")[i]).text(myCards[i]);
         }
-        $(".answerbtn").prop('disabled', false);
+        $(".answer-card").prop('disabled', false);
     });
 
     socket.on('show_answer', function(data){
@@ -148,16 +150,17 @@ $(document).ready(function(){
         socket.emit('draw_answers',data);
     });
 
-    $(".answerbtn").click(function(){
+    $(".answer-card").click(function(){
+        var ans = $(this).first().text();
         var data = {
             "username": $("#username").val(),
             "roomid": $("#roomid").val(),
-            "answer": $(this).text()
+            "answer": ans
         };
         socket.emit('submit_answer',data);
 
         for(var i=0; i < myCards.length; i++){
-            if(myCards[i] == $(this).text()){
+            if(myCards[i] == ans){
                 myCards = removeCard(myCards, i);
             }
         }
