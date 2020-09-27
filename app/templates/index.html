@@ -1,57 +1,135 @@
 <html>
 	<head>
 		<title>CAH - Online</title>
+		<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 		<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/style.css')}}"/>
 	</head>
 	<body>
-		<h1>Welcome to Cards Against Humanity Online</h1>
 
-		<div>
-			<h3>Sign In</h3>
-			<label for="username">Username</label>
-			<input type="text" name="username" id="username"/>
-			<br/><br/>
-			<label for="roomid">Room ID</label>
-			<input type="text" name="roomid" id="roomid"/>
-			<br/><br/>
-			<button id="joinButton">Join Room</button>
-			<button id="leaveButton" disabled>Leave Room</button>
-		</div>
-
-		<div>
-			<h3>Room Chat</h3>
-			<ul id="messages"></ul>
-			<input type="text" id="myMessage"/>
-			<button id="sendButton" disabled="true">Send Message</button>
-		</div>
-
-		<div>
-			<h3>Game Area</h3>
-			<button id="drawButton" disabled="true">Draw Question Card</button>
-			<button id="getAnswersButton" disabled="true">Draw Answer Card(s)</button>
-			<button id="gameResetButton" disabled>Reset The Game</button>
-			<br/>
-
-			<div>
-				<ul id="gameAnnouncements"></ul>
+		<div class="nav-div">
+			<div class="nav-left">
+				<h5>Socket Game Productions</h5>
 			</div>
-
-			<div class="question-card">
-				<p class="card-text">Draw Card</p>
-			</div>
-			<br/>
-
-			<ul class="answer-cards-list">
-				<li><button class="answerbtn" href="#">X</button></li>
-				<li><button class="answerbtn" href="#">X</button></li>
-				<li><button class="answerbtn" href="#">X</button></li>
-				<li><button class="answerbtn" href="#">X</button></li>
-				<li><button class="answerbtn" href="#">X</button></li>
+			<ul class="nav-bar">
+				<li>
+					<a id="leaveButton">Leave Room</a>
+				</li>
 			</ul>
 		</div>
 
+		<br/><br/>
+
+		<h1 id="game-title" class="white-text">Cards Against Humanity Online</h1>
+		<p class="center-text white-text italic">A Party Game For Horibble People In COVID-19 Quarantine</p>
+		<p class="center-text white-text italic">No Copyright Intended</p>
+
+		<!-- Join Game Modal -->
+		<div class="modal fade" id="signInModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modalLabel">Join Game</h5>
+					</div>
+					<div class="modal-body">
+						<div>
+							<div class="row">
+								<div class="col-md-4">
+									<label for="username">Username</label>
+								</div>
+								<div class="col-md-4">
+									<input type="text" name="username" id="username"/>
+								</div>
+							</div>
+							<br/>
+							<div class="row">
+								<div class="col-md-4">
+									<label for="roomid">Room ID</label>
+								</div>
+								<div class="col-md-4">
+									<input type="text" name="roomid" id="roomid"/>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" id="joinButton" class="btn btn-primary" data-dismiss="modal">Join Room</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- END OF Join Game Modal-->
+
+		<br/><br/>
+
+		<!-- Game Notifications -->
+
+		<div id="notifications">
+			<h3 class="white-text">Game Notifications</h3>
+			<div id="messages-div">
+				<ul id="messages">
+				</ul>
+			</div>
+			<input type="text" id="myMessage"/>
+			<button id="sendButton" class="green-btn">Send Message</button>
+		</div>
+
+		<!-- END OF Game Notifications -->
+
+		<br/><br/>
+
+		<!-- Game Area -->
+
+		<div>
+			<div class="center-text">
+				<button class="green-btn" id="drawButton" disabled="true">Draw Question Card</button>
+				<button class="green-btn" id="getAnswersButton" disabled="true">Draw Answer Card(s)</button>
+				<button class="green-btn" id="gameResetButton" disabled>Reset The Game</button>
+			</div>
+
+			<br/>
+
+			<div class="card question-card">
+				<p class="card-text">Draw Question Card</p>
+			</div>
+
+			<br/>
+
+			<ul class="answer-cards-list">
+				<li>
+					<button class="card answer-card" href="#">
+						<p class="card-text">Draw Answer Cards</p>
+					</button>
+				</li>
+				<li>
+					<button class="card answer-card" href="#">
+						<p class="card-text">Draw Answer Cards</p>
+					</button>
+				</li>
+				<li>
+					<button class="card answer-card" href="#">
+						<p class="card-text">Draw Answer Cards</p>
+					</button>
+				</li>
+				<li>
+					<button class="card answer-card" href="#">
+						<p class="card-text">Draw Answer Cards</p>
+					</button>
+				</li>
+				<li>
+					<button class="card answer-card" href="#">
+						<p class="card-text">Draw Answer Cards</p>
+					</button>
+				</li>
+			</ul>
+		</div>
+
+		<!-- END OF Game Area-->
+
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 	<script src="{{ url_for('static',filename='js/index.js') }}"></script>
 	</body>
 </html>

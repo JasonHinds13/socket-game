@@ -4,6 +4,8 @@ $(document).ready(function(){
     var myCards = [];
     const cardsNeeded = 5;
 
+    $("#signInModal").modal("show");
+
     function removeCard(cards, index){
         var newCards = []
         for(var i=0; i < cards.length; i++){
@@ -39,6 +41,8 @@ $(document).ready(function(){
 
         join_room_button_reset();
 
+        $("#signInModal").modal("show");
+
     });
 
     socket.on('join_room_message', function(data){
@@ -56,11 +60,11 @@ $(document).ready(function(){
     });
 
     socket.on('drew_question_last', function(data){
-        $("#gameAnnouncements").append('<li>Player '+data["username"]+' drew the last question card. Someone else draw</li>');
+        $("#messages").append('<li>Player '+data["username"]+' drew the last question card. Someone else draw</li>');
     });
 
     socket.on('submit_answer_success', function(data){
-        $("#gameAnnouncements").append('<li>Round '+data["round"]+' - '+data["username"]+' played a card.</li>');
+        $("#messages").append('<li>Round '+data["round"]+' - '+data["username"]+' played a card.</li>');
     });
 
     socket.on('message', function(data){
@@ -68,7 +72,7 @@ $(document).ready(function(){
     });
 
     socket.on('game_announcements', function(data) {
-        $('#gameAnnouncements').append('<li>'+data['announcement']+'</li>')
+        $('#messages').append('<li>'+data['announcement']+'</li>')
     });
 
     socket.on('game_reset', function(data) {
@@ -83,7 +87,7 @@ $(document).ready(function(){
     });
 
     socket.on('reset_game', function() {
-        $('#gameAnnouncements').children().remove();
+        $('#messages').children().remove();
         $('.question-card > .card-text').text('Draw Card');
         $('.answer-cards-list .answerbtn').text('X');
         $('.answer-cards-list .answerbtn').prop('disabled', false);
@@ -106,15 +110,15 @@ $(document).ready(function(){
     });
 
     socket.on('show_answer', function(data){
-        $("#gameAnnouncements").append('<div>------------ Round '+data[0]['round']+' Answers------------</div>');
+        $("#messages").append('<div>------------ Round '+data[0]['round']+' Answers------------</div>');
         for(var i=0; i < data.length; i++){
-            $("#gameAnnouncements").append('<li>Round '+data[i]['round']+' - '+data[i]['username'] + ' chose: ' + data[i]["answer"]+'</li>');
+            $("#messages").append('<li>Round '+data[i]['round']+' - '+data[i]['username'] + ' chose: ' + data[i]["answer"]+'</li>');
         }
-        $("#gameAnnouncements").append('<div>----------------------------------</div>');
+        $("#messages").append('<div>----------------------------------</div>');
     });
 
     socket.on('submit_answer_failed', function(data){
-        $("#gameAnnouncements").append('<li>You have already played for this round</li>');
+        $("#messages").append('<li>You have already played for this round</li>');
     });
 
     socket.on('room_error', function(data){
