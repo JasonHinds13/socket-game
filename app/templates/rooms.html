@@ -1,0 +1,55 @@
+<html>
+	<head>
+		<title>Rooms</title>
+		<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/style.css')}}"/>
+		<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='css/home.css')}}"/>
+
+		<link rel="stylesheet" type="text/css" href="../static/css/style.css"/>
+		<link rel="stylesheet" type="text/css" href="../static/css/home.css"/>
+
+	</head>
+	<body>
+		<div class="nav-div">
+			<div class="nav-left">
+				<h3>Socket Game Productions</h3>
+			</div>
+			<ul class="nav-bar">
+				<!-- If not logged in -->
+				<!-- <li><a href="" data-toggle="modal" data-target="#modalLoginForm">Login</a></li>
+				<li><a href="" data-toggle="modal" data-target="#modalSignUpForm">Sign Up</a></li> -->
+				<!-- If logged in -->
+				<li><a>Home</a></li>
+				<li><a>Find Room</a></li>
+				<li><a>Logout</a></li>
+			</ul>
+		</div>
+
+		<h2 class="title">Join A Room</h2>
+
+		<button class="create-room-btn">Create Room</button>
+
+		<div id="rooms">
+			<div class="room-details">
+				<p class="room-text">Room #1</p>
+				<p class="room-text">Players Online: 2</p>
+				<p class="room-text">Created By: jaxon5</p>
+				<p class="room-text">Date Created: 25/05/2020</p>
+				<button class="join-room-btn">Join Room</button>
+			</div>
+			<div class="room-details">
+				<p class="room-text">Room #2</p>
+				<p class="room-text">Players Online: 4</p>
+				<p class="room-text">Created By: jaxon5</p>
+				<p class="room-text">Date Created: 25/05/2020</p>
+				<button class="join-room-btn">Join Room</button>
+			</div>
+			<div class="room-details">
+				<p class="room-text">Room #3</p>
+				<p class="room-text">Players Online: 1</p>
+				<p class="room-text">Created By: jaxon5</p>
+				<p class="room-text">Date Created: 25/05/2020</p>
+				<button class="join-room-btn">Join Room</button>
+			</div>
+		</div>
+	</body>
+</html>
