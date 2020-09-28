@@ -1,38 +1,142 @@
-.question-card{
-	height: 200px;
-	width: 150px;
-	background-color: #000;
-	color: #fff;
+body{
+	background-color: #696969;
+}
+
+.nav-div{
+	overflow: hidden;
+	color: white;
+}
+
+.nav-bar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    text-align: right;
+    padding: 14px 16px;
+}
+
+.nav-bar li{
+    display: inline-block;
+}
+
+.nav-bar li a{
+    display: block;
+    font-size: 19px;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: white;
+}
+
+.nav-bar li a:hover {
+    border-bottom: 5px solid white;
+}
+
+.nav-left{
+  float: left;
+  font-size: 25px;
+  font-weight: bold;
+  text-align: center;
+  display: inline-flex;
+  margin-top: 25px;
+  margin-left: 15px;
+}
+
+#game-title{
 	text-align: center;
-	border-radius: 10px;
-	font-weight: bold;
-	margin-left: auto;
-	margin-right: auto;
+}
+
+.center-text{
+	text-align: center;
+}
+
+.italic{
+	font-style: italic;
+}
+
+#notifications{
+	margin-left: 15px;
+}
+
+#myMessage{
+  padding: 7px;
+  border-radius: 5px;
+}
+
+.white-text{
+  color: white;
+}
+
+#messages li{
+  color: white;
+  margin-bottom: 5px;
+}
+
+#messages-div{
+  height: 100px;
+  max-height: 200px;
+  width: 500px;
+  margin: 10px;
+  overflow: auto;
+}
+
+.chat-message{
+  margin-bottom: 5px;
+}
+
+.green-btn{
+  color: white;
+  padding: 10px;
+  font-weight: bold;
+  background-color: #3CB371;
+  border: 1px solid green;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.card{
+  width: 150px;
+  height: 200px;
+  border-radius: 5px;
+  text-align: center;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.question-card{
+  color: #fff;
+  background-color: #000;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.answer-card{
+  color: #000;
+  margin: 5px;
+  background-color: #fff;
+  display: inline-block;
+}
+
+.card-text{
+  margin: 0;
+  padding: 0;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .answer-cards-list{
+	text-align: center;
 	list-style-type: none;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    margin-left: auto;
-	margin-right: auto;
     padding: 14px 16px;
 }
 
 .answer-cards-list li{
 	display: inline-block;
-}
-
-.answer-cards-list li button{
-	margin-right: 10px;
-	display: block;
-    color: white;
-    font-size: 14px;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
-    background-color: blue;
 }
 
 .answer-cards-list li button:disabled{
